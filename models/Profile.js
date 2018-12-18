@@ -118,4 +118,4 @@ const ProfileSchema = new Schema({
     });
     
 // set to a variable and export schema
-module.exports = Profile = mongoose.model('users', ProfileSchema);  // set name of table and its schema
+module.exports = Profile = mongoose.model('profile', ProfileSchema);  // set name of table and its schema
