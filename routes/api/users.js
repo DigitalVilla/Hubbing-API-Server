@@ -6,6 +6,9 @@ const bcrypt = require('bcryptjs')
 const gravatar = require('gravatar');
 const jwt = require('jsonwebtoken');
 const key = require('../../config/keys').customKey;
+const passport = require('passport');
+const validateReg = require ('../../validation/register');
+const validateLog = require ('../../validation/login');
 
 
 /**
@@ -23,12 +26,14 @@ router.get('/test', (req, res) => res.json({
  * @access Public 
  */
 router.post('/register', (req, res) => {
+    const {errors, isValid} = validateReg(req.body);
+    if (!isValid)
+        return res.status(400).json(errors);
+
     User.findOne({email: req.body.email })
         .then(user => {
             if (user) // if users exist warn the sender
-                return res.status(400).json({
-                    email: "Email already exists"
-                });
+                return res.status(400).json({email: "Email already exists"});
 
             const avatar = gravatar.url(req.body.email, {
                 s: '200', //size
@@ -66,9 +71,12 @@ router.post('/register', (req, res) => {
  * @desc  Login user / send JWT token
  * @access Public 
  */
-
  router.post('/login', (req,res ) => {
-     //get params
+    const {errors, isValid} = validateLog(req.body); 
+    if (!isValid)
+       return res.status(400).json(errors);
+
+    //get params
      const email = req.body.email;
      const password = req.body.password;
     // find user in DB 
@@ -95,13 +103,35 @@ router.post('/register', (req, res) => {
                 })
 
             });
-
-            
-
         })
-
     })
-
  })
+
+
+
+/**
+ * @route GET api/users/current
+ * @desc  return current user
+ * @access private
+ */ 
+router.get('/current', passport.authenticate('jwt',{ session: false}),
+    (req,res) => { //passport will return the user to this request
+        res.json({
+            id: req.user.id,
+            name:req.user.name,
+            email:req.user.email,
+            avatar: req.user.avatar
+        })    
+    }
+);
+
+
+
+
+
+
+
+
+
 
 module.exports = router;
